@@ -8,6 +8,16 @@ def bintohex(s):
     t = ''.join(chr(int(s[i:i+8], 2)) for i in xrange(0, len(s), 8))
     return binascii.hexlify(t).upper()
 
+def hextobin(s):
+    return binascii.unhexlify(s)
+
+def string2array(s):
+    my_array = []
+    for i in range(len(s)):
+        my_array.append(int(s[i]))
+    return my_array
+
+
 def test():
     key1 = b"\0\0\0\0\0\0\0\0"
     key2 = b"\0\0\0\0\0\0\0\2"
@@ -34,25 +44,51 @@ def cbc_encrypt(message, key, iv):
       ciphertext: string
     """
     # TODO: Add your code here.
-    #padding
-    ultimate_string_length = len(message)
-    if (len(message)%8 ==0):
-        special_string = [1]
-        special_string.append([0]*63)
-        message.append(special_string)
-    else:
-        while(len(ultimate_string_length)%8 != 0):
-            ultimate_string_length += 1
-        bit_count = (ultimate_string_length - len(message))*8
-        special_string=[1]
-        special_string.append([0]*bit_count)
-        message.append(special_string)
+    b = bin(int(binascii.hexlify(message),16))
+    b = b[2:]
 
+    b = string2array(b)
+    print b
+    print type(b)
 
-    
+    #experimental
+    message_bytearray = bytearray(message)
+    message = message_bytearray #testing testing testing This should convert the message to a bytearray
+
+    print "The message length is"
+    print len(message)
+    print [x for x in message]
 
     test()
-    return ''
+    #padding
+    ultimate_string_length = len(message)
+    if len(message)%8 == 0:
+        special_string = [1]
+        special_string = special_string + [0]*63
+        print "special string is"
+        print special_string
+        message.append(special_string)
+    else:
+        while(ultimate_string_length%8 != 0):
+            ultimate_string_length += 1
+        zero_bit_count = (ultimate_string_length - len(message))*8
+        special_string=[1]+ [0]*zero_bit_count
+        print "special string is"
+        print special_string
+        message.append(special_string)
+
+    encrypted_string = []
+
+    # while len(message)>0:
+    #     subset_string = []
+    #     for i in range(0,7,1):
+    #         subset_string.append(message[0])
+    #         del message[0]
+    #         print len(message) #sanity check
+    myDes = des(hextobin(key))
+    c = myDes.des_encrypt(message)
+
+    return bintohex("".join([str(e) for e in c]))
 
 def cbc_decrypt(message, key, iv):
     """
@@ -64,9 +100,12 @@ def cbc_decrypt(message, key, iv):
     """
     # TODO: Add your code here.
 
-
     test()
-    return ''
+
+    k = des(hextobin(key))
+    c = k.des_decrypt(message)
+
+    return bintohex("".join([str(e) for e in c]))
 
 def main(argv):
     if len(argv) != 5:
