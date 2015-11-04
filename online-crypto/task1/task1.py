@@ -19,21 +19,42 @@ def string2array(s):
 
 
 def test():
-    key1 = b"\0\0\0\0\0\0\0\0"
+    key1 = b"\0\0\0\0\0\0\0\0" #bytes string literal
     key2 = b"\0\0\0\0\0\0\0\2"
     message1 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] #length is 64
+
     message2 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
-    test_des(key1, message1)
-    test_des(key1, message2)
-    test_des(key2, message1)
-    test_des(key2, message2)
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1] #length is 64
+    encrypted1 = test_des(key1, message1)
+    encrypted2 = test_des(key1, message2)
+    encrypted3 = test_des(key2, message1)
+    encrypted4 = test_des(key2, message2)
+
+    #decryption test
+    test_des_decrypt(key1, encrypted1)
+    test_des_decrypt(key1, encrypted2)
+    test_des_decrypt(key2, encrypted3)
+    test_des_decrypt(key2, encrypted4)
 
 def test_des(key, message):
     k = des(key)
-    c = k.des_encrypt(message)
-    print bintohex("".join([str(e) for e in c]))
+    c = k.des_encrypt(message) #This returns a list of 1s and 0s
+    return c
+    #print "Encryption DES returns type of:"
+    #print type(c)
+    #return bintohex("".join([str(e) for e in c]))
+
+def test_des_decrypt(key, message):
+    k = des(key)
+    c = k.des_decrypt(message) #This returns a list of 1s and 0s
+    print "Decryption DES returns type of:"
+    print type(c)
+    print c
+    #print bintohex("".join([str(e) for e in c]))
+    
+def hex_to_binary(h):
+    return ''.join(byte_to_binary(ord(b)) for b in binascii.unhexlify(h))
 
 def cbc_encrypt(message, key, iv):
     """
@@ -61,21 +82,55 @@ def cbc_encrypt(message, key, iv):
 
     test()
     #padding
-    ultimate_string_length = len(message)
-    if len(message)%8 == 0:
+
+    if len(message)%8 == 0 & len(message)/8 > 8:
         special_string = [1]
         special_string = special_string + [0]*63
+        special_string = bytearray(special_string)
         print "special string is"
-        print special_string
-        message.append(special_string)
+        print [x for x in special_string]
+        print "the special string length is "
+        print len(special_string)
+
+        print type(special_string)
+        print type(message)
+        message = message + special_string
+
+        print len(message)
+
+        print [x for x in message]
+
+    elif len(message)%8 ==0 & len(message)/8 <8:
+        special_string = [1]
+        special_string = special_string + [0]*(((8-len(message)/8)*8)-1)
+        special_string = bytearray(special_string)
+
+
+        print "special string is"
+        print [x for x in special_string]
+        print "the special string length is "
+        print len(special_string)
+
+        message = message + special_string
+
+        print "the new message is"
+        print len(message)
     else:
+        ultimate_string_length = len(message)
         while(ultimate_string_length%8 != 0):
+
             ultimate_string_length += 1
-        zero_bit_count = (ultimate_string_length - len(message))*8
+        zero_bit_count = (ultimate_string_length - len(message))*8 - 1
         special_string=[1]+ [0]*zero_bit_count
         print "special string is"
         print special_string
-        message.append(special_string)
+
+        message = message + bytearray(special_string)
+
+        print "the new message length is"
+        print len(message)
+
+        print [x for x in message]
 
     encrypted_string = []
 
@@ -87,6 +142,8 @@ def cbc_encrypt(message, key, iv):
     #         print len(message) #sanity check
     myDes = des(hextobin(key))
     c = myDes.des_encrypt(message)
+
+    print bintohex("".join([str(e) for e in c]))
 
     return bintohex("".join([str(e) for e in c]))
 
