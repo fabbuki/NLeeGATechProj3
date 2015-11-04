@@ -52,7 +52,7 @@ def test_des_decrypt(key, message):
     print type(c)
     print c
     #print bintohex("".join([str(e) for e in c]))
-    
+
 def hex_to_binary(h):
     return ''.join(byte_to_binary(ord(b)) for b in binascii.unhexlify(h))
 
